@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/pico.min.css">
     <style>
         .grid img { width: 100%; }
+        video { width: 100%; height: auto; }
     </style>
 
     <title>Marktstammdatenregister.dev</title>
@@ -69,13 +70,42 @@
 
         <h2 id="Beispiele">Beispiele</h2>
         <article>
-            <header><strong>Eröffnungsbilanz Klimaschutz</strong> nachvollziehen <a href="https://youtu.be/SgRJkASrvWI"><strong>→&nbsp;Video</strong></a></header>
+            <header><strong>Eröffnungsbilanz Klimaschutz</strong> nachvollziehen</header>
             <p>
-            In diesem Video vollziehen wir die Daten der Grafik <em>Ausbau Wind und Photovoltaik</em> in der am 13. Januar 2022 veröffentlichten <em>Eröffnungsbilanz Klimaschutz</em> nach:
+            In diesem Video vollziehen wir die Daten der Grafik <em>Ausbau Wind und Photovoltaik</em> in der am 13. Januar 2022 veröffentlichten <a href="https://www.bmwi.de/Redaktion/DE/Downloads/Energie/220111_eroeffnungsbilanz_klimaschutz.pdf?__blob=publicationFile&v=8">Eröffnungsbilanz Klimaschutz</a> nach:
             <p>
-            <a href="https://youtu.be/SgRJkASrvWI">
-                <img src="/static/eroeffnungsbilanz-vorschau.png" width="1136" height="639">
-            </a>
+            <video controls="controls" src="https://s3.eu-central-1.wasabisys.com/mastr-backup/GYDCidNZRaG2N7sZ7XZ1vQ.mp4">
+                Dein Browser scheint keine Videos zu unterstützen! Sorry.
+            </video>
+            <details>
+                <summary>Notizen zum Video und weiterführende Links</summary>
+                <p>
+                Links zu den Ergebnissen der SQL-Abfragen inklusive Visualisierung:
+                <ul>
+                    <li>Brutto-Zubau von Photovoltaik von Anfang 2000 bis jetzt: <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Jahr%2C%0D%0A++printf%28%22%25.2f%22%2C+sum%28Bruttoleistung%29+%2F+1000000%29+as+ZubauBruttoleistungGW%0D%0Afrom%0D%0A++EinheitSolar%0D%0Awhere%0D%0A++Jahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Jahr%0D%0Aorder+by%0D%0A++Jahr+desc#g.mark=bar&g.x_column=Jahr&g.x_type=temporal&g.y_column=ZubauBruttoleistungGW&g.y_type=quantitative">verbesserte Version</a> / <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Jahr%2C%0D%0A++sum%28Bruttoleistung%29+as+ZubauBruttoleistung%0D%0Afrom%0D%0A++EinheitSolar%0D%0Awhere%0D%0A++Jahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Jahr%0D%0Aorder+by%0D%0A++Jahr+desc#g.mark=bar&g.x_column=Jahr&g.x_type=temporal&g.y_column=ZubauBruttoleistung&g.y_type=quantitative">wie im Video</a>
+                    </li>
+                    <li>Brutto-Zubau von Windenergie von Anfang 2000 bis jetzt nach Lage (Land/See): <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Jahr%2C%0D%0A++%28select+Wert+from+Katalogwert+where+Id+%3D+EinheitWind.Lage%29+as+Lage%2C%0D%0A++printf%28%22%25.2f%22%2C+sum%28Bruttoleistung%29+%2F+1000000%29+as+ZubauBruttoleistungGW%0D%0Afrom%0D%0A++EinheitWind%0D%0Awhere%0D%0A++Jahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Jahr%2C+Lage%0D%0Aorder+by%0D%0A++Jahr+desc#g.mark=bar&g.x_column=Jahr&g.x_type=temporal&g.y_column=ZubauBruttoleistungGW&g.y_type=quantitative&g.color_column=Lage">verbesserte Version</a> / <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Jahr%2C%0D%0A++%28select+Wert+from+Katalogwert+where+Id+%3D+Lage%29+as+Lage%2C%0D%0A++sum%28Bruttoleistung%29+as+ZubauBruttoleistung%0D%0Afrom%0D%0A++EinheitWind%0D%0Awhere%0D%0A++Jahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Jahr%2C+Lage%0D%0Aorder+by%0D%0A++Jahr+desc#g.mark=bar&g.x_column=Jahr&g.x_type=temporal&g.y_column=ZubauBruttoleistung&g.y_type=quantitative&g.color_column=Lage">wie im Video</a>
+                    </li>
+                </ul>
+                <p>
+                Hinter Marktstammdatenregister.dev steht eine Instanz von <a href="https://datasette.io">Datasette</a> mit einigen Plugins.
+                In diesem Video geht es um folgende Themen:
+                <ul>
+                    <li>Tabellen in Datasette navigieren</li>
+                    <li>Einträge in der Tabellenansicht sortieren und filtern</li>
+                    <li>Mit SQL Daten zusammenfassen</li>
+                    <li>Daten mit dem Plugin <a href="https://datasette.io/plugins/datasette-vega">datasette-vega</a> visualisieren</li>
+                </ul>
+                <p>
+                00:00 Einführung: "Ausbau Wind und Photovoltaik" in der "Eröffnungsbilanz Klimaschutz"<br/>
+                00:48 Photovoltaik im MaStR: Tabelle "EinheitSolar"<br/>
+                02:24 Zubau von Photovoltaik abfragen: "sum()" und "group by"<br/>
+                06:23 Zubau von Photovoltaik visualisieren<br/>
+                07:30 Hinweis: Visualisierung ist als Vorschau gedacht<br/>
+                07:55 Zubau von Windenergie abfragen und visualisieren: Tabelle "EinheitWind"<br/>
+                09:52 Windenergie nach Lage (Land/See) unterscheiden: Tabelle "Katalogkategorie" und SQL sub-query<br/>
+                13:54 CSV herunterladen
+            </details>
         </article>
 
         <article>
