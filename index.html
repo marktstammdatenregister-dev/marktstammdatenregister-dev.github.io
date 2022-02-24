@@ -244,12 +244,11 @@
         </footer>
     </main>
 
-    <!-- Die Content Security Policy von Sourcehut Pages erlaubt kein XHR.
     <script>
 // Inspiriert von https://stephenafamo.com/blog/posts/how-to-create-an-autocomplete-input-with-plain-javascript
 window.addEventListener("load", function () {
     let ort_input = document.getElementById("ort");
-    ort_input.addEventListener("keyup", function (event) { update_list(event) });
+    ort_input.addEventListener("input", function (event) { update_list(event) });
     window.ort_xhr = new XMLHttpRequest();
 });
 
@@ -274,7 +273,6 @@ function update_list(event) {
     window.ort_xhr.send()
 }
     </script>
-    -->
 </body>
 
 </html>
