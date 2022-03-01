@@ -9,6 +9,7 @@
     <style>
         .grid img { width: 100%; }
         video { width: 100%; height: auto; }
+	[type="search"] { border-radius: var(--border-radius) !important; }
     </style>
 
     <title>Marktstammdatenregister.dev</title>
@@ -113,7 +114,7 @@
             Suche hier nach einem <strong>Ort</strong>, um eine Karte der dort registrierten <strong>Photovoltaikanlagen</strong> anzuzeigen:
             <form action="https://ds.marktstammdatenregister.dev/Marktstammdatenregister/EinheitSolar">
                 <div class="grid">
-                    <input type="text" name="Ort__exact" id="ort" list="ort-liste" autocomplete="off" placeholder="Ortsname" required title="Ortsnamen bitte vollständig und mit korrekter Groß-/Kleinschreibung eingeben.">
+                    <input type="search" name="Ort__exact" id="ort" list="ort-liste" autocomplete="off" placeholder="Ortsname" required title="Ortsnamen bitte vollständig und mit korrekter Groß-/Kleinschreibung eingeben.">
                     <datalist id="ort-liste"></datalist>
                     <button type="submit">Karte öffnen</button>
                 </div>
