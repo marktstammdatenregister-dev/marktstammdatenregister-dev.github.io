@@ -2,8 +2,5 @@
 # Vendored files
 #
 
-# https://gc.zgo.at/count.js
-/static/count-ds.js linguist-vendored
-
 # https://unpkg.com/@picocss/pico@1.4.4/css/pico.min.css
 /static/pico.min.css linguist-vendored
