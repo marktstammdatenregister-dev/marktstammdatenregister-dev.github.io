@@ -112,68 +112,121 @@
 
         <article>
             <p>
-            Suche hier nach einem <strong>Ort</strong>, um eine Karte der dort registrierten <strong>Photovoltaikanlagen</strong> anzuzeigen:
-            <form action="https://ds.marktstammdatenregister.dev/Marktstammdatenregister/EinheitSolar">
+            Suche hier nach einem <strong>Ort</strong>, um eine Karte der dort registrierten <strong>Stromerzeugungseinheiten</strong> anzuzeigen:
+            <form action="https://ds.marktstammdatenregister.dev/Marktstammdatenregister#g.mark=circle&g.x_column=Bruttoleistung&g.x_type=quantitative&g.y_column=Art&g.y_type=ordinal">
                 <div class="grid">
-                    <input type="search" name="Ort__exact" id="ort" list="ort-liste" autocomplete="off" placeholder="Ortsname" required title="Ortsnamen bitte vollständig und mit korrekter Groß-/Kleinschreibung eingeben.">
+                    <input type="search" name="Ort" id="ort" list="ort-liste" autocomplete="off" placeholder="Ortsname" required title="Ortsnamen bitte vollständig und mit korrekter Groß-/Kleinschreibung eingeben.">
                     <datalist id="ort-liste"></datalist>
                     <button type="submit">Karte öffnen</button>
                 </div>
                 <small>Klicke <em>load all</em> (unter der Karte), um alle Anlagen anzuzeigen. Für private Photovoltaikanlagen sind keine Koordinaten hinterlegt, deshalb werden sie nicht auf der Karte angezeigt. Um alle Spalten anzuzeigen, klicke auf das Zahnradsymbol neben einem Spaltennamen und dann auf <em>Show all columns</em>.</small>
-                <input type="hidden" name="_sort_desc" value="Inbetriebnahmedatum">
-
-                <input type="hidden" name="_facet" value="EinheitBetriebsstatus">
-                <input type="hidden" name="_facet" value="Gemeinde">
-                <input type="hidden" name="_facet" value="Hauptausrichtung">
-                <input type="hidden" name="_facet" value="HauptausrichtungNeigungswinkel">
-                <input type="hidden" name="_facet" value="Lage">
-                <input type="hidden" name="_facet" value="Nutzungsbereich">
-
-                <input type="hidden" name="_nocol" value="Adresszusatz">
-                <input type="hidden" name="_nocol" value="AltAnlagenbentreiberMastrNummer">
-                <input type="hidden" name="_nocol" value="AnschlussAnHoechstOderHochSpannung">
-                <input type="hidden" name="_nocol" value="ArtDerFlaecheIds">
-                <input type="hidden" name="_nocol" value="BestandsanlageMastrNummer">
-                <input type="hidden" name="_nocol" value="Bundesland">
-                <input type="hidden" name="_nocol" value="DatumBeginnVoruebergehendeStilllegung">
-                <input type="hidden" name="_nocol" value="DatumDesBetreiberwechsels">
-                <input type="hidden" name="_nocol" value="DatumEndgueltigeStilllegung">
-                <input type="hidden" name="_nocol" value="DatumRegistrierungDesBetreiberwechsels">
-                <input type="hidden" name="_nocol" value="DatumWiederaufnahmeBetrieb">
-                <input type="hidden" name="_nocol" value="EinheitSystemstatus">
-                <input type="hidden" name="_nocol" value="EinheitlicheAusrichtungUndNeigungswinkel">
-                <input type="hidden" name="_nocol" value="Einsatzverantwortlicher">
-                <input type="hidden" name="_nocol" value="Energietraeger">
-                <input type="hidden" name="_nocol" value="FernsteuerbarkeitDr">
-                <input type="hidden" name="_nocol" value="FernsteuerbarkeitDv">
-                <input type="hidden" name="_nocol" value="FernsteuerbarkeitNb">
-                <input type="hidden" name="_nocol" value="FlurFlurstuecknummern">
-                <input type="hidden" name="_nocol" value="Gemeindeschluessel">
-                <input type="hidden" name="_nocol" value="GenMastrNummer">
-                <input type="hidden" name="_nocol" value="GeplantesInbetriebnahmedatum">
-                <input type="hidden" name="_nocol" value="Hausnummer">
-                <input type="hidden" name="_nocol" value="HausnummerNichtGefunden">
-                <input type="hidden" name="_nocol" value="Hausnummer_nv">
-                <input type="hidden" name="_nocol" value="InAnspruchGenommeneAckerflaeche">
-                <input type="hidden" name="_nocol" value="InAnspruchGenommeneFlaeche">
-                <input type="hidden" name="_nocol" value="Inselbetriebsfaehigkeit">
-                <input type="hidden" name="_nocol" value="Kraftwerksnummer">
-                <input type="hidden" name="_nocol" value="Kraftwerksnummer_nv">
-                <input type="hidden" name="_nocol" value="Land">
-                <input type="hidden" name="_nocol" value="Landkreis">
-                <input type="hidden" name="_nocol" value="NetzbetreiberpruefungDatum">
-                <input type="hidden" name="_nocol" value="NetzbetreiberpruefungStatus">
-                <input type="hidden" name="_nocol" value="NichtVorhandenInMigriertenEinheiten">
-                <input type="hidden" name="_nocol" value="Ort">
-                <input type="hidden" name="_nocol" value="Postleitzahl">
-                <input type="hidden" name="_nocol" value="PraequalifiziertFuerRegelenergie">
-                <input type="hidden" name="_nocol" value="Schwarzstartfaehigkeit">
-                <input type="hidden" name="_nocol" value="Strasse">
-                <input type="hidden" name="_nocol" value="StrasseNichtGefunden">
-                <input type="hidden" name="_nocol" value="Weic">
-                <input type="hidden" name="_nocol" value="WeicDisplayName">
-                <input type="hidden" name="_nocol" value="Weic_nv">
-                <input type="hidden" name="_nocol" value="ZugeordneteWirkleistungWechselrichter">
+                <input type="hidden" name="sql" value="select
+  'Biomasse' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitBiomasse
+where
+  Ort = :Ort
+union all
+select
+  'GeoSolarthermieGrubenKlaerschlammDruckentspannung' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitGeoSolarthermieGrubenKlaerschlammDruckentspannung
+where
+  Ort = :Ort
+union all
+select
+  'Kernkraft' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitKernkraft
+where
+  Ort = :Ort
+union all
+select
+  'Solar' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitSolar
+where
+  Ort = :Ort
+union all
+select
+  'Verbrennung' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitVerbrennung
+where
+  Ort = :Ort
+union all
+select
+  'Wasser' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitWasser
+where
+  Ort = :Ort
+union all
+select
+  'Wind' as Art,
+  EinheitMastrNummer,
+  Bruttoleistung,
+  Registrierungsdatum,
+  Inbetriebnahmedatum,
+  Strasse,
+  NameStromerzeugungseinheit,
+  Laengengrad,
+  Breitengrad
+from
+  EinheitWind
+where
+  Ort = :Ort
+order by
+  Bruttoleistung desc">
+                <input type="hidden" name="_hide_sql" value="1">
             </form>
         </article>
 
@@ -301,6 +354,11 @@ function update_list(event) {
             });
         }
     };
+    // Theoretisch sollten wir alle Einheit* Tabellen befragen. Aber
+    // EinheitSolar scheint die meisten Orte zu haben, und das ist gut
+    // genug für unsere Zwecke.
+    //
+    // Siehe 'select count(distinct Ort) from EinheitSolar'
     window.ort_xhr.open("GET", "https://ds.marktstammdatenregister.dev/Marktstammdatenregister.json?sql=with+Orte+as+(%0D%0A++select%0D%0A++++Ort%2C%0D%0A++++count(*)+as+Anzahl%0D%0A++from%0D%0A++++EinheitSolar%0D%0A++where%0D%0A++++Ort+between+%3AOrtPraefix%0D%0A++++and+%3AOrtPraefix+||+%22~%22%0D%0A++group+by%0D%0A++++Ort%0D%0A++order+by%0D%0A++++Anzahl+desc%0D%0A++limit%0D%0A++++100%0D%0A)%0D%0Aselect%0D%0A++Ort%0D%0Afrom%0D%0A++Orte&_shape=array&OrtPraefix=" + input, true);
     window.ort_xhr.send()
 }
