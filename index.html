@@ -248,7 +248,7 @@
                 <li>
                     <strong>Wann wurden Photovoltaikanlagen in Betrieb genommen und wann wurden sie registriert?</strong>
                     Die Registrierung hinkt noch hinterher. Auch im Jahr 2022 wurden noch Photovoltaikanlagen registriert, die schon 2010 in Betrieb gegangen sind.
-                    <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Registrierungsdatum%29+as+Registrierungsjahr%2C%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Inbetriebnahmejahr%2C%0D%0A++count%28*%29+as+Einheiten%0D%0Afrom%0D%0A++EinheitSolar%0D%0Awhere%0D%0A++Inbetriebnahmejahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Registrierungsjahr%2C%0D%0A++Inbetriebnahmejahr%0D%0Aorder+by%0D%0A++Registrierungsjahr+desc%2C%0D%0A++Inbetriebnahmejahr+desc&_hide_sql=1#g.mark=bar&g.x_column=Registrierungsjahr&g.x_type=ordinal&g.y_column=Einheiten&g.y_type=quantitative">
+                    <a href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister?sql=select%0D%0A++strftime%28%22%25Y%22%2C+Registrierungsdatum%29+as+Registrierungsjahr%2C%0D%0A++strftime%28%22%25Y%22%2C+Inbetriebnahmedatum%29+as+Inbetriebnahmejahr%2C%0D%0A++count%28*%29+as+Einheiten%0D%0Afrom%0D%0A++EinheitSolar%0D%0Awhere%0D%0A++Inbetriebnahmejahr+%3E%3D+%222000%22%0D%0Agroup+by%0D%0A++Registrierungsjahr%2C%0D%0A++Inbetriebnahmejahr%0D%0Aorder+by%0D%0A++Registrierungsjahr+desc%2C%0D%0A++Inbetriebnahmejahr+desc&_hide_sql=1#g.mark=circle&g.x_column=Registrierungsjahr&g.x_type=temporal&g.y_column=Inbetriebnahmejahr&g.y_type=temporal&g.size_column=Einheiten">
                         →&nbsp;Zum&nbspDatensatz
                     </a>
                 </li>
