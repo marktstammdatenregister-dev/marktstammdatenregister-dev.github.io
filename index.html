@@ -120,7 +120,8 @@
                     <button type="submit">Karte öffnen</button>
                 </div>
                 <small>Klicke <em>load all</em> (unter der Karte), um alle Anlagen anzuzeigen. Für private Photovoltaikanlagen sind keine Koordinaten hinterlegt, deshalb werden sie nicht auf der Karte angezeigt. Um alle Spalten anzuzeigen, klicke auf das Zahnradsymbol neben einem Spaltennamen und dann auf <em>Show all columns</em>.</small>
-                <input type="hidden" name="sql" value="select
+                <input type="hidden" name="sql" value="
+select
   'Biomasse' as Art,
   EinheitMastrNummer,
   Bruttoleistung,
@@ -146,7 +147,7 @@ select
   Laengengrad,
   Breitengrad
 from
-  EinheitGeoSolarthermieGrubenKlaerschlammDruckentspannung
+  EinheitGeothermieGrubengasDruckentspannung
 where
   Ort = :Ort
 union all
