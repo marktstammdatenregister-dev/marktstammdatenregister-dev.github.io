@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/pico.min.css" />
+    <style>
+        @media (max-width:992px) {
+            nav, nav ul {
+                display: inherit !important;
+            }
+        }
+    </style>
+
+    <title>Marktstammdatenregister.dev: Gemeindeschlüssel</title>
+</head>
+
+<body>
+    <main class="container">
+        <nav>
+            <ul>
+                <li>
+                    <hgroup>
+                        <h1>Markt<wbr/>stamm<wbr/>daten<wbr/>register<wbr/>.dev</h1>
+                        <h2>Flexibler Zugriff auf öffentliche Daten zum deutschen Strom- und Gasmarkt.</h2>
+                    </hgroup>
+                </li>
+            </ul>
+            <ul>
+                <li><a role="button" href="https://ds.marktstammdatenregister.dev/Marktstammdatenregister">Zum
+                        Datensatz</a></li>
+            </ul>
+        </nav>
+
+        <section>
+            <article>
+                <table aria-busy="true" id="gemeindeschluessel"></table>
+            </article>
+        </section>
+
+        <footer>
+            Leonhard Markert<br />
+            <a class="secondary"
+                href="mailto:kontakt@marktstammdatenregister.dev">kontakt@marktstammdatenregister.dev</a><br />
+            <a class="secondary"
+                href="https://github.com/marktstammdatenregister-dev/">github.com/marktstammdatenregister-dev</a>
+        </footer>
+    </main>
+
+    <script>
+        window.addEventListener("load", async function () {
+            const result = await fetchAll(`
+WITH Erneuerbare AS (
+    SELECT 'Biomasse' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitBiomasse
+    UNION ALL
+    SELECT 'GeothermieGrubengasDruckentspannung' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitGeothermieGrubengasDruckentspannung
+    UNION ALL
+    SELECT 'Kernkraft' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitKernkraft
+    UNION ALL
+    SELECT 'Solar' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitSolar
+    UNION ALL
+    SELECT 'StromSpeicher' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitStromSpeicher
+    UNION ALL
+    SELECT 'Verbrennung' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitVerbrennung
+    UNION ALL
+    SELECT 'Wasser' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitWasser
+    UNION ALL
+    SELECT 'Wind' AS Typ, Bundesland,Gemeindeschluessel,Ort
+    FROM EinheitWind
+)
+SELECT "Bundesland", "Ort", '<a href="https://marktstammdatenregister.dev/gemeinde?Gemeindeschluessel=' || Gemeindeschluessel || '">' || Gemeindeschluessel || '</a>' AS "Gemeindeschlüssel", count(*) AS Einheiten
+FROM (
+SELECT Erneuerbare.* EXCLUDE (Bundesland),
+k0.Wert AS Bundesland
+FROM Erneuerbare
+LEFT JOIN Katalogwert k0 ON (Erneuerbare.Bundesland = k0.Id))
+WHERE Gemeindeschluessel IS NOT NULL
+GROUP BY ALL
+HAVING Einheiten > 5
+ORDER BY Bundesland ASC, Ort ASC, Einheiten DESC
+            `);
+            const table = document.getElementById("gemeindeschluessel");
+
+            const thead = document.createElement("thead");
+            const tr = document.createElement("tr");
+            thead.appendChild(tr);
+            result.columns.forEach((col) => {
+                const td = document.createElement("td");
+                td.innerText = col.name;
+                tr.appendChild(td);
+            });
+
+            const tbody = document.createElement("tbody");
+            result.data.forEach((data) => {
+                const tr = document.createElement("tr");
+                tbody.appendChild(tr);
+                data.forEach((value) => {
+                    const td = document.createElement("td");
+                    td.innerHTML = value;
+                    tr.appendChild(td);
+                });
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            table.setAttribute("aria-busy", false);
+        });
+
+        async function fetchAll(query) {
+            let resp = await fetch("https://trino.marktstammdatenregister.dev/v1/statement", {
+                method: "POST",
+                body: query,
+            });
+            let json = await resp.json();
+            let columns = json.columns;
+            let data = json.data;
+            var nextUri = json.nextUri;
+            while (!!nextUri) {
+                resp = await fetch(nextUri);
+                json = await resp.json();
+                data = data.concat(json.data);
+                nextUri = json.nextUri;
+            }
+            return ({ columns: columns, data: data })
+        }
+    </script>
+</body>
+
+</html>

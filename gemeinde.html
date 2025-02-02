@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/wasm/perspective-server.wasm"
+        as="fetch" type="application/wasm" crossorigin="anonymous" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/wasm/perspective-viewer.wasm"
+        as="fetch" type="application/wasm" crossorigin="anonymous" />
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css" />
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/@finos/perspective-workspace/dist/css/pro.css" />
+    <script type="module">
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.3.0/dist/cdn/perspective-viewer.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-workspace@3.3.0/dist/cdn/perspective-workspace.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.3.0/dist/cdn/perspective-viewer-datagrid.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.3.0/dist/cdn/perspective-viewer-d3fc.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-openlayers/dist/cdn/perspective-viewer-openlayers.js";
+
+        import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective@3.3.0/dist/cdn/perspective.js";
+
+        const worker = await perspective.worker();
+
+        function transformToColumnOriented(input) {
+            const result = {};
+
+            // Initialize arrays for each column
+            input.columns.forEach(col => {
+                result[col.name] = [];
+            });
+
+            // Fill arrays with data
+            input.data.forEach(row => {
+                row.forEach((value, colIndex) => {
+                    const colName = input.columns[colIndex].name;
+                    result[colName].push(value);
+                });
+            });
+
+            return result;
+        }
+
+        // https://github.com/finos/perspective/blob/3ccef43435f768127e2bfc4a1067b729eaa6ab40/packages/perspective-workspace/src/ts/workspace/workspace.ts#L45
+        const layout = {
+            "sizes": [1],
+            "detail": {
+                "main": {
+                    "type": "split-area",
+                    "orientation": "horizontal",
+                    "children": [
+                        {
+                            "type": "tab-area",
+                            "widgets": ["MAP", "TREE_Typ", "BAR_Inbetriebnahme"],
+                            "currentIndex": 0,
+                        },
+                        {
+                            "type": "tab-area",
+                            "widgets": ["GRID"],
+                            "currentIndex": 0,
+                        },
+                    ],
+                    "sizes": [0.4, 0.6],
+                },
+            },
+            "mode": "globalFilters",
+            "viewers": {
+                "MAP": {
+                    "table": "erneuerbare",
+                    "plugin": "Map Scatter",
+                    "title": "Karte (alle Einheiten mit EinheitBetriebsstatus = In Betrieb)",
+                    "plugin_config": {},
+                    "columns_config": {},
+                    "settings": false,
+                    "theme": "Pro Light",
+                    "group_by": [],
+                    "split_by": [
+                        "Typ",
+                    ],
+                    "columns": [
+                        "Laengengrad",
+                        "Breitengrad",
+                        null,
+                        "Nettonennleistung",
+                        "EinheitMastrNummer",
+                        "Typ",
+                        "NameStromerzeugungseinheit",
+                    ],
+                    "filter": [
+                        [
+                            "Laengengrad",
+                            "is not null",
+                            null,
+                        ],
+                        [
+                            "Breitengrad",
+                            "is not null",
+                            null,
+                        ],
+                        [
+                            "EinheitBetriebsstatus",
+                            "==",
+                            "In Betrieb",
+                        ],
+                    ],
+                    "expressions": {},
+                    "aggregates": {},
+
+                },
+                "GRID": {
+                    "table": "erneuerbare",
+                    "version": "3.3.0",
+                    "plugin": "Datagrid",
+                    "plugin_config": {
+                        "edit_mode": "READ_ONLY",
+                        "scroll_lock": true
+                    },
+                    "columns_config": {
+                        "Nettonennleistung": {
+                            "number_bg_mode": "gradient"
+                        },
+                        "Energietraeger": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "Gemarkung": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "Typ": {
+                            "string_color_mode": "series"
+                        },
+                        "Einspeisungsart": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "EinheitSystemstatus": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "Bruttoleistung": {
+                            "number_bg_mode": "gradient"
+                        },
+                        "Landkreis": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "DatumLetzteAktualisierung": {
+                            "date_format": {
+                                "timeZone": "Europe/Berlin",
+                                "timeStyle": "disabled"
+                            }
+                        },
+                        "EinheitBetriebsstatus": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        },
+                        "NetzbetreiberpruefungStatus": {
+                            "string_color_mode": "series",
+                            "color": "#d2e6f4"
+                        }
+                    },
+                    "settings": false,
+                    "theme": "Pro Light",
+                    "title": "Eigenschaften (alle Einheiten)",
+                    "group_by": [],
+                    "split_by": [],
+                    "columns": [
+                        "EinheitMastrNummer",
+                        "Typ",
+                        "EinheitBetriebsstatus",
+                        "Nettonennleistung",
+                        "Bruttoleistung",
+                        "NameStromerzeugungseinheit",
+                        "Inbetriebnahmedatum",
+                        "GeplantesInbetriebnahmedatum",
+                        "Registrierungsdatum",
+                        "DatumLetzteAktualisierung",
+                        "Strasse",
+                        "Hausnummer",
+                        "Energietraeger",
+                        "Einspeisungsart",
+                        "Gemarkung",
+                        "Ort",
+                        "FlurFlurstuecknummern",
+                        "NetzbetreiberpruefungDatum",
+                        "NetzbetreiberpruefungStatus"
+                    ],
+                    "filter": [],
+                    "sort": [
+                        [
+                            "Nettonennleistung",
+                            "desc"
+                        ]
+                    ],
+                    "expressions": {},
+                    "aggregates": {}
+
+
+                },
+                "TREE_Typ": {
+                    "table": "erneuerbare",
+                    "plugin": "Treemap",
+                    "plugin_config": {},
+                    "columns_config": {},
+                    "settings": false,
+                    "theme": "Pro Light",
+                    "title": "Nach Typ (alle Einheiten mit EinheitBetriebsstatus = In Betrieb)",
+                    "group_by": [
+                        "Typ",
+                        "NameStromerzeugungseinheit"
+                    ],
+                    "split_by": [],
+                    "columns": [
+                        "Nettonennleistung",
+                        "Typ",
+                        "EinheitMastrNummer"
+                    ],
+                    "filter": [
+                        [
+                            "Laengengrad",
+                            "is not null",
+                            null
+                        ],
+                        [
+                            "Breitengrad",
+                            "is not null",
+                            null
+                        ],
+                        [
+                            "EinheitBetriebsstatus",
+                            "==",
+                            "In Betrieb"
+                        ]
+                    ],
+                    "sort": [
+                        [
+                            "Nettonennleistung",
+                            "asc"
+                        ]
+                    ],
+                    "expressions": {},
+                    "aggregates": {
+                        "Typ": "any",
+                        "EinheitMastrNummer": "join"
+                    }
+                },
+                "BAR_Inbetriebnahme": {
+                    "table": "erneuerbare",
+                    "version": "3.3.0",
+                    "plugin": "Y Bar",
+                    "plugin_config": {},
+                    "columns_config": {},
+                    "settings": false,
+                    "theme": "Pro Light",
+                    "title": "Nach Inbetriebnahmejahr (alle Einheiten mit EinheitBetriebsstatus = In Betrieb)",
+                    "group_by": [
+                        "InbetriebnahmeJahr"
+                    ],
+                    "split_by": [
+                        "Typ"
+                    ],
+                    "columns": [
+                        "Nettonennleistung"
+                    ],
+                    "filter": [
+                        [
+                            "EinheitBetriebsstatus",
+                            "==",
+                            "In Betrieb"
+                        ],
+                        [
+                            "Inbetriebnahmedatum",
+                            ">=",
+                            "2000-01-01"
+                        ]
+                    ],
+                    "sort": [],
+                    "expressions": {
+                        "InbetriebnahmeJahr": "substring(string(\"Inbetriebnahmedatum\"), 0, 4)"
+                    },
+                    "aggregates": {
+                        "Typ": "any"
+                    }
+                }
+            },
+        }
+
+        const gemeindeschluessel = new URLSearchParams(window.location.search).get("Gemeindeschluessel");
+        const columnsArr = [
+            // "Adresszusatz",
+            // "AltAnlagenbentreiberMastrNummer",
+            // "AnlagenbetreiberMastrNummer",
+            // "Adresszusatz",
+            // "AltAnlagenbentreiberMastrNummer",
+            // "AnlagenbetreiberMastrNummer",
+            // "AnschlussAnHoechstOderHochSpannung",
+            // "BestandsanlageMastrNummer",
+            "Breitengrad",
+            "Bruttoleistung",
+            // "Bundesland",
+            // "DatumBeginnVoruebergehendeStilllegung",
+            // "DatumDesBetreiberwechsels",
+            // "DatumEndgueltigeStilllegung",
+            "DatumLetzteAktualisierung",
+            // "DatumRegistrierungDesBetreiberwechsels",
+            // "DatumWiederaufnahmeBetrieb",
+            "EinheitBetriebsstatus",
+            "EinheitMastrNummer",
+            // "EinheitSystemstatus",
+            // "Einsatzverantwortlicher",
+            "Einspeisungsart",
+            "Energietraeger",
+            // "FernsteuerbarkeitDr",
+            // "FernsteuerbarkeitDv",
+            // "FernsteuerbarkeitNb",
+            "FlurFlurstuecknummern",
+            "Gemarkung",
+            "Gemeinde",
+            "Gemeindeschluessel",
+            "GenMastrNummer",
+            "GeplantesInbetriebnahmedatum",
+            "Hausnummer",
+            // "Hausnummer_nv",
+            // "HausnummerNichtGefunden",
+            "Inbetriebnahmedatum",
+            // "Inselbetriebsfaehigkeit",
+            // "Kraftwerksnummer",
+            // "Kraftwerksnummer_nv",
+            "Laengengrad",
+            "Land",
+            "Landkreis",
+            "LokationMaStRNummer",
+            "NameStromerzeugungseinheit",
+            "Nettonennleistung",
+            "NetzbetreiberpruefungDatum",
+            "NetzbetreiberpruefungStatus",
+            // "NichtVorhandenInMigriertenEinheiten",
+            "Ort",
+            "Postleitzahl",
+            // "PraequalifiziertFuerRegelenergie",
+            "Registrierungsdatum",
+            // "Schwarzstartfaehigkeit",
+            "Strasse",
+            // "StrasseNichtGefunden",
+            // "Weic",
+            // "Weic_nv",
+            // "WeicDisplayName",
+        ];
+        const columns = columnsArr.join(",")
+        const resolveToKatalogColumnsArr = [
+            // "Bundesland",
+            "EinheitBetriebsstatus",
+            // "EinheitSystemstatus",
+            "Einspeisungsart",
+            "Energietraeger",
+            "Land",
+            "NetzbetreiberpruefungStatus",
+        ];
+        function resolveToKatalog(originalTable) {
+            const except = resolveToKatalogColumnsArr.join(",");
+            const newCols = resolveToKatalogColumnsArr.map((col, idx) => `k${idx}.Wert AS ${col}`).join("\n,");
+            const joins = resolveToKatalogColumnsArr.map((col, idx) => `LEFT JOIN Katalogwert k${idx} ON (${originalTable}.${col} = k${idx}.Id)`).join("\n");
+            return `
+SELECT ${originalTable}.* EXCLUDE (${except}),
+${newCols}
+FROM ${originalTable}
+${joins}`;
+        }
+        const query = `
+WITH Erneuerbare AS (
+    SELECT 'Biomasse' AS Typ, ${columns}
+    FROM EinheitBiomasse
+    UNION ALL
+    SELECT 'GeothermieGrubengasDruckentspannung' AS Typ, ${columns}
+    FROM EinheitGeothermieGrubengasDruckentspannung
+    UNION ALL
+    SELECT 'Kernkraft' AS Typ, ${columns}
+    FROM EinheitKernkraft
+    UNION ALL
+    SELECT 'Solar' AS Typ, ${columns}
+    FROM EinheitSolar
+    UNION ALL
+    SELECT 'StromSpeicher' AS Typ, ${columns}
+    FROM EinheitStromSpeicher
+    UNION ALL
+    SELECT 'Verbrennung' AS Typ, ${columns}
+    FROM EinheitVerbrennung
+    UNION ALL
+    SELECT 'Wasser' AS Typ, ${columns}
+    FROM EinheitWasser
+    UNION ALL
+    SELECT 'Wind' AS Typ, ${columns}
+    FROM EinheitWind
+)
+${resolveToKatalog("Erneuerbare")}
+WHERE Gemeindeschluessel = '${gemeindeschluessel}'
+ORDER BY Nettonennleistung DESC
+LIMIT 100000`;
+
+
+        async function fetchAll(query) {
+            let resp = await fetch("https://trino.marktstammdatenregister.dev/v1/statement", {
+                method: "POST",
+                body: query,
+            });
+            let json = await resp.json();
+            let columns = json.columns;
+            let data = json.data;
+            var nextUri = json.nextUri;
+            while (!!nextUri) {
+                resp = await fetch(nextUri);
+                json = await resp.json();
+                data = data.concat(json.data);
+                nextUri = json.nextUri;
+            }
+            return transformToColumnOriented({ columns: columns, data: data })
+        }
+
+        const data = await fetchAll(query);
+        const table = worker.table(data);
+        window.workspace.tables.set("erneuerbare", table);
+        window.workspace.restore(layout);
+    </script>
+    <style>
+        perspective-workspace {
+            left: 0;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <perspective-workspace id="workspace"></perspective-workspace>
+</body>
+
+</html>
