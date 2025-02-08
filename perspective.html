@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/wasm/perspective-server.wasm"
+        as="fetch" type="application/wasm" crossorigin="anonymous" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/wasm/perspective-viewer.wasm"
+        as="fetch" type="application/wasm" crossorigin="anonymous" />
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css" />
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/@finos/perspective-workspace/dist/css/pro.css" />
+
+    <title>Marktstammdatenregister.dev</title>
+
+    <script type="module">
+        const params = new URLSearchParams(window.location.search)
+        let query;
+        if (params.has("sql")) {
+            query = params.get("sql");
+        } else {
+            query = `SELECT 'Use the "SQL" button at the bottom to enter a query.' AS "Getting started"`;
+        }
+        document.getElementById("sql").value = query;
+
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.3.0/dist/cdn/perspective-viewer.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-workspace@3.3.0/dist/cdn/perspective-workspace.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.3.0/dist/cdn/perspective-viewer-datagrid.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.3.0/dist/cdn/perspective-viewer-d3fc.js";
+        import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-openlayers/dist/cdn/perspective-viewer-openlayers.js";
+
+        import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective@3.3.0/dist/cdn/perspective.js";
+
+        const worker = await perspective.worker();
+
+        function transformToColumnOriented(input) {
+            const result = {};
+
+            // Initialize arrays for each column
+            input.columns.forEach(col => {
+                result[col.name] = [];
+            });
+
+            // Fill arrays with data
+            input.data.forEach(row => {
+                row.forEach((value, colIndex) => {
+                    const colName = input.columns[colIndex].name;
+                    result[colName].push(value);
+                });
+            });
+
+            return result;
+        }
+
+        const defaultLayout = {
+            "sizes": [1],
+            "detail": {
+                "main": {
+                    "type": "tab-area",
+                    "widgets": ["GRID"],
+                    "currentIndex": 0
+                }
+            },
+            "viewers": {
+                "GRID": {
+                    "table": "table",
+                    "version": "3.3.0",
+                    "plugin": "Datagrid",
+                    "plugin_config": {
+                        "columns": {},
+                        "edit_mode": "READ_ONLY",
+                        "scroll_lock": false
+                    },
+                    "columns_config": {},
+                    "title": "Ergebnisse",
+                    "group_by": [],
+                    "split_by": [],
+                    "columns": [],
+                    "filter": [],
+                    "sort": [],
+                    "expressions": {},
+                    "aggregates": {},
+                    "settings": false
+                }
+            }
+        };
+
+        async function fetchAll(query) {
+            let resp = await fetch("https://trino.marktstammdatenregister.dev/v1/statement", {
+                method: "POST",
+                body: query,
+            });
+            let json = await resp.json();
+            if (!!json.error) {
+                throw new Error(json.error.message);
+            }
+            let columns = json.columns;
+            let data = json.data;
+            var nextUri = json.nextUri;
+            while (!!nextUri) {
+                resp = await fetch(nextUri);
+                json = await resp.json();
+                data = data.concat(json.data);
+                nextUri = json.nextUri;
+            }
+            return transformToColumnOriented({ columns: columns, data: data })
+        }
+
+        async function updateTable(query) {
+            let data;
+            try {
+                data = await fetchAll(query);
+            } catch (error) {
+                document.getElementById("error").value = error.message;
+                openEditor();
+                return;
+            }
+            document.getElementById("error").value = null;
+
+            const url = new URL(window.location);
+            url.searchParams.set("sql", query);
+            history.pushState({}, "", url);
+            saveLayout();
+
+            const table = worker.table(data);
+            window.workspace.tables.set("table", table);
+        }
+
+        try {
+            const url = new URL(window.location);
+            if (url.searchParams.has("layout")) {
+                const layout = JSON.parse(url.searchParams.get("layout"));
+                window.workspace.restore(layout);
+            } else {
+                window.workspace.restore(defaultLayout);
+            }
+        } catch {
+            window.workspace.restore(defaultLayout);
+        }
+
+        await updateTable(query);
+
+
+        function openEditor() {
+            document.body.classList.add("show-editor");
+            document.body.classList.remove("hide-editor");
+        }
+
+        function closeEditor() {
+            document.body.classList.remove("show-editor");
+            document.body.classList.add("hide-editor");
+        }
+
+        document.getElementById("apply").onclick = async () => await updateTable(document.getElementById("sql").value);
+        document.getElementById("open-editor").onclick = openEditor;
+        document.getElementById("close-editor").onclick = closeEditor;
+
+        async function saveLayout() {
+            const layout = await window.workspace.save();
+            const url = new URL(window.location);
+
+            const previousLayout = url.searchParams.get("layout");
+            const newLayout = JSON.stringify(layout);
+
+            if (previousLayout != newLayout) {
+                url.searchParams.set("layout", JSON.stringify(layout));
+                history.pushState({}, "", url);
+            }
+        }
+
+        // Ideally only do this when something actually changed -- but I
+        // couldn't figure which events we should listen to here, if any.
+        window.setInterval(saveLayout, 1000);
+    </script>
+    <style>
+        #editor-area {
+            z-index: 1;
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            top: 10%;
+            bottom: 10%;
+            width: 30%;
+            min-width: 60ch;
+            max-width: 100ch;
+            border-radius: 6px;
+            box-shadow: 5px 5px 10px 0 #dedede;
+            font-family: "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+        }
+
+        #editor-area textarea {
+            resize: none;
+            padding: 1ch;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        #editor-area #sql {
+            height: 100%;
+            width: 100%;
+            border-radius: inherit;
+            border: 1px solid #bababa;
+        }
+
+        #editor-area #error {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 35px;
+            margin: 0;
+            background: #f7dada;
+            height: 6em;
+            max-height: 10em;
+            border: none;
+        }
+
+        #editor-area #error:placeholder-shown {
+            display: none;
+        }
+
+        #editor-area #actions {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+        }
+
+        #editor-area #show-editor {
+            display: none;
+        }
+
+        #editor-toggle {
+            z-index: 1;
+
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content;
+
+            padding: 1px 5px;
+
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #bababa;
+            border-bottom-width: 0;
+
+            background-color: #3da28f;
+            font-family: "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+            font-size: 12px;
+        }
+
+        #editor-toggle a {
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        .hide-editor #editor-area {
+            display: none;
+        }
+
+        .hide-editor #close-editor {
+            display: none;
+        }
+
+        .show-editor #open-editor {
+            display: none;
+        }
+
+        perspective-workspace {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body class="hide-editor">
+    <div id="editor-area">
+        <textarea id="sql"></textarea>
+        <textarea id="error" placeholder="(Errors will be shown here.)"></textarea>
+        <div id="actions">
+            <button id="apply">Apply</button>
+        </div>
+    </div>
+    <div id="editor-toggle">
+        <a href="#" id="open-editor">⇱ SQL</a>
+        <a href="#" id="close-editor">⇲ SQL</a>
+    </div>
+    <perspective-workspace id="workspace"></perspective-workspace>
+</body>
+
+</html>
