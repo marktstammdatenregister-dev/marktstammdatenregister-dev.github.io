@@ -255,9 +255,12 @@
             font-size: 12px;
         }
 
-        #editor-toggle a {
+        #editor-toggle button {
+            font-family: inherit;
             text-decoration: none;
             color: #ffffff;
+            border: none;
+            background: inherit;
         }
 
         .hide-editor #editor-area {
@@ -291,8 +294,8 @@
         </div>
     </div>
     <div id="editor-toggle">
-        <a href="#" id="open-editor">⇱ SQL</a>
-        <a href="#" id="close-editor">⇲ SQL</a>
+        <button id="open-editor">⇱ SQL</button>
+        <button id="close-editor">⇲ SQL</button>
     </div>
     <perspective-workspace id="workspace"></perspective-workspace>
 </body>
